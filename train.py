@@ -32,7 +32,7 @@ def train(config):
 
     # Setup the loss and optimizer
     criterion = nn.CrossEntropyLoss().to(device)
-    optimizer = torch.optim.RMSprop(model.parameters()) # lr=config.learning_rate)
+    optimizer = torch.optim.SGD(model.parameters(), lr=1e-2)
     highest = 0 
     save = []
     epochs = 0
@@ -59,21 +59,24 @@ def train(config):
             # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.max_norm)
             optimizer.step()
 
+            print(predictions)
+
             
             accuracy = (torch.argmax(predictions, dim=1) == y_target).cpu().numpy().mean()
             loss = loss.item()
-            
-            if step % 100== 0:
-                save.append(accuracy)
 
-
-            if (accuracy > highest):
-                highest = accuracy
-                torch.save(model.state_dict(), 'lstm-model.pt')
+            accuracies.append(accuracy)
+            losses.append(loss)
 
 
         t2 = time.time()
         examples_per_second = len(dataset)/float(t2-t1)
+
+        accuracy = np.array(accuracies).mean()
+        loss = np.array(losses).mean()
+        if (accuracy > highest):
+            highest = accuracy
+            torch.save(model.state_dict(), 'lstm-model.pt')
         epochs += 1
         print("[{}] Train epochs {:04d}/{:04d}, Batch Size = {}, Examples/Sec = {:.2f}, "
                       "Accuracy = {:.2f}, Loss = {:.3f}".format(
@@ -95,7 +98,7 @@ if __name__ == "__main__":
     parser.add_argument('--output_dim', type=int, default=2, help='Dimensionality of output sequence')
     parser.add_argument('--hidden_dim', type=int, default=256, help='Number of hidden units in the model')
     parser.add_argument('--n_layers', type=int, default=2, help='Number of hidden units in the model')
-    parser.add_argument('--batch_size', type=int, default=128, help='Number of examples to process in a batch')
+    parser.add_argument('--batch_size', type=int, default=32, help='Number of examples to process in a batch')
     parser.add_argument('--learning_rate', type=float, default=0.001, help='Learning rate for Adam')
     parser.add_argument('--dropout', type=float, default=0.5, help='Drop out rate')
     parser.add_argument('--train_epochs', type=int, default=50, help='Number of training epochs')

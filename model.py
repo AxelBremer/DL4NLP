@@ -34,21 +34,10 @@ class NN(nn.Module):
         #text = [sent len, batch size]
         
         embeddings = self.embedding(text)
-        embedded = self.dropout(embeddings)
+        # embedded = self.dropout(embeddings)
         
-        #embedded = [sent len, batch size, emb dim]
-        
-        #packed_embedded = nn.utils.rnn.pack_padded_sequence(embedded, text_lengths)
-        
-        output, (hidden, cell) = self.nn(embedded)
-        
-        #output, output_lengths = nn.utils.rnn.pad_packed_sequence(packed_output)
+        lstm_output, (hidden, cell) = self.nn(embeddings)
 
-        #output = [sent len, batch size, hid dim * num directions]        
-        
-        #concat the final forward (hidden[-2,:,:]) and backward (hidden[-1,:,:]) hidden layers
-        #and apply dropout
-        
-        # hidden = self.dropout(torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim = 1))
-                            
-        return self.sigmoid(self.fc(self.dropout(output[:,-1,:].squeeze())))
+        output = self.fc(lstm_output[:,-1,:])
+
+        return self.sigmoid(output)
