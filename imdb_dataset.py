@@ -123,7 +123,9 @@ class IMDBDataset(data.Dataset):
         self.seq_length = seq_length
 
 
-        reviews, labels = load_data(mypath)
+        reviews, labels = load_data('data/train')
+
+        test_reviews, test_labels = load_data('data/test')
 
         all_words = ' '.join(reviews)
         all_words = re.sub('\\[x]\w\w', '', all_words)
