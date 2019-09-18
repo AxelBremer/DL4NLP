@@ -19,9 +19,7 @@ class NN(nn.Module):
         
         self.nn = nn.LSTM(embedding_dim, 
                            hidden_dim, 
-                           num_layers=n_layers, 
-                           bidirectional=bidirectional, 
-                           dropout=dropout)
+                           num_layers=n_layers)
         
         self.fc = nn.Linear(hidden_dim, output_dim)
         
