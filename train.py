@@ -40,15 +40,16 @@ def train(config):
     print('Starting training...')
 
     while epochs < config.train_epochs:
-
+        accuracies = []
+        losses = [] 
         t1 = time.time()
 
         for step, (batch_inputs, batch_targets) in enumerate(data_loader):
 
-            x = batch_inputs.to(device)
-            y_target = batch_targets.to(device)
+            x = batch_inputs.long().to(device)
+            y_target = batch_targets.long().to(device)
 
-            predictions = model(batch_inputs).to(device)
+            predictions = model(x)
 
 
             loss = criterion(predictions, y_target)
@@ -59,7 +60,7 @@ def train(config):
             optimizer.step()
 
             
-            accuracy = (torch.argmax(predictions, dim=1) == batch_targets.to(device)).numpy().mean()
+            accuracy = (torch.argmax(predictions, dim=1) == y_target).cpu().numpy().mean()
             loss = loss.item()
             
             if step % 100== 0:

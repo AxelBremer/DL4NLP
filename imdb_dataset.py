@@ -124,7 +124,7 @@ class IMDBDataset(data.Dataset):
 
         vocab = vocab.split('\n')
 
-        self._vocab_size = len(vocab)
+        self._vocab_size = len(vocab)+2
 
         self._word_to_ix = {w:i+1 for i, w in enumerate(vocab)}
         self._ix_to_word = {value:key for key, value in self._word_to_ix.items()}

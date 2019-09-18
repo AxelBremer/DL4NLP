@@ -33,7 +33,8 @@ class NN(nn.Module):
         
         #text = [sent len, batch size]
         
-        embedded = self.dropout(self.embedding(text))
+        embeddings = self.embedding(text)
+        embedded = self.dropout(embeddings)
         
         #embedded = [sent len, batch size, emb dim]
         
