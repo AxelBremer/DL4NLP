@@ -93,15 +93,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Model params
-    parser.add_argument('--seq_length', type=int, default=60, help='Dimensionality of input sequence')
+    parser.add_argument('--seq_length', type=int, default=200, help='Dimensionality of input sequence')
     parser.add_argument('--embed_dim', type=int, default=300, help='Dimensionality of the embeddings')
     parser.add_argument('--output_dim', type=int, default=2, help='Dimensionality of output sequence')
     parser.add_argument('--hidden_dim', type=int, default=512, help='Number of hidden units in the model')
-    parser.add_argument('--n_layers', type=int, default=1, help='Number of hidden units in the model')
-    parser.add_argument('--batch_size', type=int, default=512, help='Number of examples to process in a batch')
+    parser.add_argument('--n_layers', type=int, default=2, help='Number of hidden units in the model')
+    parser.add_argument('--batch_size', type=int, default=256, help='Number of examples to process in a batch')
     parser.add_argument('--learning_rate', type=float, default=0.5, help='Learning rate for Adam')
     parser.add_argument('--dropout', type=float, default=0.5, help='Drop out rate')
-    parser.add_argument('--train_epochs', type=int, default=50, help='Number of training epochs')
+    parser.add_argument('--train_epochs', type=int, default=150, help='Number of training epochs')
     parser.add_argument('--bidirectional', type=bool, default=False)
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
 
