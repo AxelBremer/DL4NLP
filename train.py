@@ -27,23 +27,25 @@ def train(config):
     dataset = IMDBDataset(train_or_test='train', seq_length=config.seq_length)
     data_loader = DataLoader(dataset, config.batch_size, shuffle=True, num_workers=1)
 
+    # Initialize the dataset and data loader (note the +1)
+    test_dataset = IMDBDataset(train_or_test='test', seq_length=config.seq_length)
+    test_data_loader = DataLoader(dataset, config.batch_size, shuffle=True, num_workers=1)
+
      # Initialize the model that we are going to use
     model = NN(dataset.vocab_size, config.embed_dim, config.hidden_dim, config.output_dim, config.n_layers, config.bidirectional, config.dropout, 0).to(device)
 
     # Setup the loss and optimizer
     criterion = nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.Adam(model.parameters())#, lr=config.learning_rate)
-    highest = 0 
+    lowest = 100
     save = []
     epochs = 0
-
-    print('Starting training...')
 
     while epochs < config.train_epochs:
         accuracies = []
         losses = [] 
         t1 = time.time()
-
+        print('Training')
         for step, (batch_inputs, batch_targets) in enumerate(data_loader):
 
             x = batch_inputs.long().to(device)
@@ -74,18 +76,42 @@ def train(config):
 
         accuracy = np.array(accuracies).mean()
         loss = np.array(losses).mean()
-        if (accuracy > highest):
-            highest = accuracy
-            # torch.save(model.state_dict(), 'lstm-model.pt')
+
+        # Test on test set
+        print('Testing')
+        with torch.no_grad():
+            test_accuracies = []
+            test_losses = []
+            for step, (batch_inputs, batch_targets) in enumerate(test_data_loader):
+
+                x = batch_inputs.long().to(device)
+                y_target = batch_targets.long().to(device)
+
+                predictions = model(x, dropout=False)
+
+                test_loss = criterion(predictions, y_target)
+                
+                test_accuracy = (torch.argmax(predictions, dim=1) == y_target).cpu().numpy().mean()
+                test_loss = test_loss.item()
+
+                test_accuracies.append(test_accuracy)
+                test_losses.append(test_loss)
+
+        test_accuracy = np.array(test_accuracies).mean()
+        test_loss = np.array(test_losses).mean()
+
+        if (test_loss < lowest):
+            lowest = test_loss
+            torch.save(model.state_dict(), f'{config.seq_length}_model.pt')
+
         epochs += 1
-        print("[{}] Train epochs {:04d}/{:04d}, Batch Size = {}, Examples/Sec = {:.2f}, "
-                      "Accuracy = {:.2f}, Loss = {:.3f}".format(
+        print("[{}] Train epochs {:04d}/{:04d}, Train Accuracy = {:.2f}, Train Loss = {:.3f}, Test Accuracy = {:.2f}, Test Loss = {:.3f}".format(
                         datetime.now().strftime("%Y-%m-%d %H:%M"), epochs,
-                        config.train_epochs, config.batch_size, examples_per_second,
-                        accuracy, loss))
+                        config.train_epochs, accuracy, loss,
+                        test_accuracy, test_loss))
 
     print('Done training.')
-    return accuracy, highest, save
+    return accuracy, lowest, save
 
 if __name__ == "__main__":
 
@@ -100,7 +126,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_layers', type=int, default=2, help='Number of hidden units in the model')
     parser.add_argument('--batch_size', type=int, default=256, help='Number of examples to process in a batch')
     parser.add_argument('--learning_rate', type=float, default=0.5, help='Learning rate for Adam')
-    parser.add_argument('--dropout', type=float, default=0.5, help='Drop out rate')
+    parser.add_argument('--dropout', type=float, default=0.2, help='Drop out rate')
     parser.add_argument('--train_epochs', type=int, default=150, help='Number of training epochs')
     parser.add_argument('--bidirectional', type=bool, default=False)
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")

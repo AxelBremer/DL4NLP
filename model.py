@@ -31,13 +31,18 @@ class NN(nn.Module):
 
         self.sigmoid = nn.Sigmoid()
         
-    def forward(self, text):
-        
+    def forward(self, text, dropout=True):
         embeddings = self.embedding(text).transpose(1, 0)
         
-        lstm_output, (hidden, cell) = self.nn(self.dropout(embeddings))
-        last_output = lstm_output[-1,:,:].squeeze()
+        if dropout:
+            lstm_output, (hidden, cell) = self.nn(self.dropout(embeddings))
+            last_output = lstm_output[-1,:,:].squeeze()
 
-        output = self.fc(self.dropout(last_output))
+            output = self.fc(self.dropout(last_output))
+        else:
+            lstm_output, (hidden, cell) = self.nn(embeddings)
+            last_output = lstm_output[-1,:,:].squeeze()
+
+            output = self.fc(last_output)
 
         return self.sigmoid(output)
