@@ -171,6 +171,12 @@ class IMDBDataset(data.Dataset):
     def __len__(self):
         return self._data_size
 
+    def get_reviews(self):
+        return self._reviews
+
+    def get_targets(self):
+        return self._labels
+
     @property
     def vocab_size(self):
         return self._vocab_size
