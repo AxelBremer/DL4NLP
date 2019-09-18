@@ -17,11 +17,15 @@ class NN(nn.Module):
         
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx = pad_idx)
         
-        self.nn = nn.LSTM(embedding_dim, 
-                           hidden_dim, 
-                           num_layers=n_layers)
+        self.nn = nn.LSTM(input_size=embedding_dim, 
+                          hidden_size=hidden_dim, 
+                          num_layers=n_layers,
+                          bidirectional=bidirectional)
         
-        self.fc = nn.Linear(hidden_dim, output_dim)
+        if bidirectional:
+            self.fc = nn.Linear(hidden_dim*2, output_dim)
+        else:
+            self.fc = nn.Linear(hidden_dim, output_dim)
         
         self.dropout = nn.Dropout(dropout)
 
@@ -29,13 +33,11 @@ class NN(nn.Module):
         
     def forward(self, text):
         
-        #text = [sent len, batch size]
+        embeddings = self.embedding(text).transpose(1, 0)
         
-        embeddings = self.embedding(text)
-        # embedded = self.dropout(embeddings)
-        
-        lstm_output, (hidden, cell) = self.nn(embeddings)
+        lstm_output, (hidden, cell) = self.nn(self.dropout(embeddings))
+        last_output = lstm_output[-1,:,:].squeeze()
 
-        output = self.fc(lstm_output[:,-1,:])
+        output = self.fc(self.dropout(last_output))
 
         return self.sigmoid(output)
