@@ -14,10 +14,13 @@ from torch.utils.data import DataLoader
 from imdb_dataset import IMDBDataset
 from model import NN
 
+
+
 def train(config):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Initialize the device which to run the model on
-    device = torch.device(config.device)
+    device = torch.device(device)
 
    
     # Initialize the dataset and data loader (note the +1)
@@ -96,7 +99,7 @@ if __name__ == "__main__":
     parser.add_argument('--dropout', type=float, default=0.5, help='Drop out rate')
     parser.add_argument('--train_epochs', type=int, default=50, help='Number of training epochs')
     parser.add_argument('--bidirectional', type=bool, default=False)
-    parser.add_argument('--device', type=str, default="cpu", help="Training device 'cpu' or 'cuda:0'")
+    parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
 
     config = parser.parse_args()
 

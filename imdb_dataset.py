@@ -112,41 +112,52 @@ def load_data(mypath):
 
     return reviews, labels
 
-class IMDBDataset(data.Dataset):
 
+class IMDBDataset(data.Dataset):
     def __init__(self, train_or_test, seq_length):
-        if train_or_test == 'train':
-            mypath = 'data/train'
-        else:
-            mypath = 'data/test'
+        self._train_or_test = train_or_test
 
         self.seq_length = seq_length
 
+        with open('data/imdb.vocab', 'r', encoding='utf-8') as f:
+            vocab = f.read()
 
-        reviews, labels = load_data('data/train')
+        vocab = vocab.split('\n')
 
-        test_reviews, test_labels = load_data('data/test')
+        self._vocab_size = len(vocab)
 
-        all_words = ' '.join(reviews)
-        all_words = re.sub('\\[x]\w\w', '', all_words)
-        word_list = list(set(all_words.split(' ')))
-        word_counter = Counter(all_words.split(' '))
-        total_words = len(word_list)
-        sorted_words = word_counter.most_common(total_words)
-        self._word_to_ix = {w:i+1 for i, (w,c) in enumerate(sorted_words)}
+        self._word_to_ix = {w:i+1 for i, w in enumerate(vocab)}
         self._ix_to_word = {value:key for key, value in self._word_to_ix.items()}
+        
+        self._unknown_ix = len(self._word_to_ix.keys()) + 1
 
-        # Tokenize reviews
-        tokenized_reviews = []
-        for review in reviews:
-            tokenized_reviews.append([self._word_to_ix[w] for w in review.split()])
+        try:
+            print('Checking for file...')
+            with open(f'data/pckls/{train_or_test}_{seq_length}.pckl', 'rb') as f:
+                d = pickle.load(f)
+            print('found file!')
+        
+        except Exception as e:
+            print(e)
+            print(f'File not found. Creating {train_or_test}ing file for {seq_length} seq length')
 
-        reviews, labels = pad_and_truncate(tokenized_reviews, labels, self.seq_length)
+            reviews, labels = load_data(f'data/{train_or_test}')
+            # Tokenize reviews
+            tokenized_reviews = []
+            for review in reviews:
+                tokenized_reviews.append([self._word_to_ix.get(w, self._unknown_ix) for w in review.split()])
 
-        self._vocab_size = len(word_list)
-        self._data_size = reviews.shape[0]
-        self._reviews = reviews
-        self._labels = labels
+            reviews, labels = pad_and_truncate(tokenized_reviews, labels, self.seq_length)
+
+            d = {'reviews': reviews, 'labels': labels}
+
+            with open(f'data/pckls/{train_or_test}_{seq_length}.pckl', 'wb') as f:
+                pickle.dump(d, f)
+
+        self._reviews = d['reviews']
+        self._labels = d['labels']
+        self._data_size = self._reviews.shape[0]
+
 
 
     def __getitem__(self, item):
