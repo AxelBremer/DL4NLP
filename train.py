@@ -25,11 +25,11 @@ def train(config):
    
     # Initialize the dataset and data loader (note the +1)
     dataset = IMDBDataset(train_or_test='train', seq_length=config.seq_length)
-    data_loader = DataLoader(dataset, config.batch_size, shuffle=True, num_workers=1)
+    data_loader = DataLoader(dataset, config.batch_size, shuffle=True, num_workers=4)
 
     # Initialize the dataset and data loader (note the +1)
     test_dataset = IMDBDataset(train_or_test='test', seq_length=config.seq_length)
-    test_data_loader = DataLoader(dataset, config.batch_size, shuffle=True, num_workers=1)
+    test_data_loader = DataLoader(test_dataset, config.batch_size, shuffle=True, num_workers=4)
 
      # Initialize the model that we are going to use
     model = NN(dataset.vocab_size, config.embed_dim, config.hidden_dim, config.output_dim, config.n_layers, config.bidirectional, config.dropout, 0).to(device)
@@ -126,9 +126,9 @@ if __name__ == "__main__":
     parser.add_argument('--n_layers', type=int, default=2, help='Number of hidden units in the model')
     parser.add_argument('--batch_size', type=int, default=256, help='Number of examples to process in a batch')
     parser.add_argument('--learning_rate', type=float, default=0.5, help='Learning rate for Adam')
-    parser.add_argument('--dropout', type=float, default=0.2, help='Drop out rate')
+    parser.add_argument('--dropout', type=float, default=0.5, help='Drop out rate')
     parser.add_argument('--train_epochs', type=int, default=150, help='Number of training epochs')
-    parser.add_argument('--bidirectional', type=bool, default=False)
+    parser.add_argument('--bidirectional', type=bool, default=True)
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
 
     config = parser.parse_args()
