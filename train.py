@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 
 from imdb_dataset import IMDBDataset
 from model import NN
+from recurrent_dropout_lstm import Model
 
 
 
@@ -32,7 +33,11 @@ def train(config):
     test_data_loader = DataLoader(dataset, config.batch_size, shuffle=True, num_workers=1)
 
      # Initialize the model that we are going to use
-    model = NN(dataset.vocab_size, config.embed_dim, config.hidden_dim, config.output_dim, config.n_layers, config.bidirectional, config.dropout, 0).to(device)
+    if not (config.recurrent_dropout_model):
+        model = NN(dataset.vocab_size, config.embed_dim, config.hidden_dim, config.output_dim, config.n_layers, config.bidirectional, config.dropout, 0).to(device)
+    else: 
+        model = Model(dataset.vocab_size).to(device)
+
 
     # Setup the loss and optimizer
     criterion = nn.CrossEntropyLoss().to(device)
@@ -51,8 +56,11 @@ def train(config):
             x = batch_inputs.long().to(device)
             y_target = batch_targets.long().to(device)
 
-            predictions = model(x)
+            if config.recurrent_dropout_model:
+                x.transpose(1,0)
 
+            predictions = model(x)
+            print(predictions.shape)
 
             loss = criterion(predictions, y_target)
             optimizer.zero_grad()
@@ -63,8 +71,12 @@ def train(config):
 
             # print(predictions)
 
-            
-            accuracy = (torch.argmax(predictions, dim=1) == y_target).cpu().numpy().mean()
+            if config.recurrent_dropout_model:
+                accuracy = (torch.argmax(predictions, dim=0) == y_target).cpu().numpy().mean()
+
+
+            else:
+              accuracy = (torch.argmax(predictions, dim=1) == y_target).cpu().numpy().mean()
             loss = loss.item()
 
             accuracies.append(accuracy)
@@ -130,6 +142,8 @@ if __name__ == "__main__":
     parser.add_argument('--train_epochs', type=int, default=150, help='Number of training epochs')
     parser.add_argument('--bidirectional', type=bool, default=False)
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
+    parser.add_argument('--recurrent_dropout_model', type=bool, default=True, help="Vanilla bidirectional LSTM or recurrent output LSTM")
+
 
     config = parser.parse_args()
 
