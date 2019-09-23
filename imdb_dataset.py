@@ -165,6 +165,9 @@ class IMDBDataset(data.Dataset):
         target = self._labels[item]
         return inputs, target
 
+    def string_to_ix(self, sent):
+        return [self._word_to_ix.get(w, self._unknown_ix) for w in sent.split()]
+
     def convert_to_string(self, word_ix):
         return ''.join(self._ix_to_word[ix] for ix in word_ix)
 
