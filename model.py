@@ -46,7 +46,7 @@ class NN(nn.Module):
                     new_hidden_state.size() = (batch_size, hidden_size)
                       
         """
-        hidden = final_state[-1]
+        hidden = final_state.squeeze(0)
         attn_weights = torch.bmm(lstm_output, hidden.unsqueeze(2)).squeeze(2)
         soft_attn_weights = F.softmax(attn_weights, 1)
         new_hidden_state = torch.bmm(lstm_output.transpose(1, 2), soft_attn_weights.unsqueeze(2)).squeeze(2)
@@ -59,17 +59,22 @@ class NN(nn.Module):
 
         if dropout:
             lstm_output, (hidden, cell) = self.nn(self.dropout(embeddings))
-            output = lstm_output.permute(1, 0, 2)
             last_output = lstm_output[-1,:,:].squeeze()
-            
+
+            output = lstm_output.permute(1, 0, 2)
+            hidden = torch.cat([hidden[-1], hidden[-2]], dim=1)
             attn_output = self.attention_net(output, hidden)
+
             output = self.fc(self.dropout(attn_output))
+            
         else:
             lstm_output, (hidden, cell) = self.nn(embeddings)
             last_output = lstm_output[-1,:,:].squeeze()
-            output = lstm_output.permute(1, 0, 2)
 
+            output = lstm_output.permute(1, 0, 2)
+            hidden = torch.cat([hidden[-1], hidden[-2]], dim=1)
             attn_output = self.attention_net(output, hidden)
+
             output = self.fc(attn_output)
 
 
