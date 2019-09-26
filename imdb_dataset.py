@@ -129,7 +129,8 @@ class IMDBDataset(data.Dataset):
         self._word_to_ix = {w:i+1 for i, w in enumerate(vocab)}
         self._ix_to_word = {value:key for key, value in self._word_to_ix.items()}
         
-        self._unknown_ix = len(self._word_to_ix.keys()) + 1
+        # self._unknown_ix = len(self._word_to_ix.keys()) + 1
+        self._unknown_ix = 0
 
         try:
             print('Checking for file...')
@@ -169,7 +170,11 @@ class IMDBDataset(data.Dataset):
         return [self._word_to_ix.get(w, self._unknown_ix) for w in sent.split()]
 
     def convert_to_string(self, word_ix):
-        return ''.join(self._ix_to_word[ix] for ix in word_ix)
+        st = ''
+        for ix in word_ix:
+            if ix != 0:
+                st += self._ix_to_word[ix] + ' '
+        return st
 
     def __len__(self):
         return self._data_size

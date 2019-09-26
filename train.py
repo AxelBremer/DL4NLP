@@ -36,12 +36,13 @@ def train(config):
     if not (config.recurrent_dropout_model):
         model = NN(dataset.vocab_size, config.embed_dim, config.hidden_dim, config.output_dim, config.n_layers, config.bidirectional, config.dropout, 0).to(device)
     else: 
-        model = Model(dataset.vocab_size).to(device)
+        model = Model(dataset.vocab_size, output_dim=config.output_dim).to(device)
 
 
     # Setup the loss and optimizer
     criterion = nn.CrossEntropyLoss().to(device)
-    optimizer = torch.optim.Adam(model.parameters())#, lr=config.learning_rate)
+    # criterion = torch.nn.MSELoss().to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
     lowest = 100
     save = []
     epochs = 0
@@ -56,11 +57,8 @@ def train(config):
             x = batch_inputs.long().to(device)
             y_target = batch_targets.long().to(device)
 
-            if config.recurrent_dropout_model:
-                x.transpose(1,0)
 
             predictions = model(x)
-            print(predictions.shape)
 
             loss = criterion(predictions, y_target)
             optimizer.zero_grad()
@@ -68,15 +66,7 @@ def train(config):
             
             # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.max_norm)
             optimizer.step()
-
-            # print(predictions)
-
-            if config.recurrent_dropout_model:
-                accuracy = (torch.argmax(predictions, dim=0) == y_target).cpu().numpy().mean()
-
-
-            else:
-              accuracy = (torch.argmax(predictions, dim=1) == y_target).cpu().numpy().mean()
+            accuracy = (torch.argmax(predictions, dim=1) == y_target).cpu().numpy().mean()
             loss = loss.item()
 
             accuracies.append(accuracy)
@@ -99,7 +89,7 @@ def train(config):
                 x = batch_inputs.long().to(device)
                 y_target = batch_targets.long().to(device)
 
-                predictions = model(x, dropout=False)
+                predictions = model(x)
 
                 test_loss = criterion(predictions, y_target)
                 
@@ -134,10 +124,10 @@ if __name__ == "__main__":
     parser.add_argument('--seq_length', type=int, default=200, help='Dimensionality of input sequence')
     parser.add_argument('--embed_dim', type=int, default=300, help='Dimensionality of the embeddings')
     parser.add_argument('--output_dim', type=int, default=2, help='Dimensionality of output sequence')
-    parser.add_argument('--hidden_dim', type=int, default=512, help='Number of hidden units in the model')
+    parser.add_argument('--hidden_dim', type=int, default=512, help='Number of hidden unit')
     parser.add_argument('--n_layers', type=int, default=2, help='Number of hidden units in the model')
-    parser.add_argument('--batch_size', type=int, default=256, help='Number of examples to process in a batch')
-    parser.add_argument('--learning_rate', type=float, default=0.5, help='Learning rate for Adam')
+    parser.add_argument('--batch_size', type=int, default=128, help='Number of examples to process in a batch')
+    parser.add_argument('--learning_rate', type=float, default=0.005, help='Learning rate for Adam')
     parser.add_argument('--dropout', type=float, default=0.5, help='Drop out rate')
     parser.add_argument('--train_epochs', type=int, default=150, help='Number of training epochs')
     parser.add_argument('--bidirectional', type=bool, default=True)
