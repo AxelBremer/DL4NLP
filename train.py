@@ -36,6 +36,7 @@ def train(config):
     test_data_loader = DataLoader(test_dataset, config.batch_size, shuffle=True, num_workers=4)
 
      # Initialize the model that we are going to use
+    
     if not (config.recurrent_dropout_model):
         model = NN(dataset.vocab_size, config.embed_dim, config.hidden_dim, config.output_dim, config.n_layers, config.bidirectional, config.dropout, 0).to(device)
     else: 
@@ -48,7 +49,7 @@ def train(config):
 
     with open(f'runs/{config.name}/args.txt', 'w') as f:
         json.dump(config.__dict__, f, indent=2)
-
+    
 
 
     # Setup the loss and optimizer
@@ -128,7 +129,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Model params
-    parser.add_argument('--name', type=str, required=True, help='name of run')
+    parser.add_argument('--name', type=str, required=False, help='name of run')
     parser.add_argument('--seq_length', type=int, default=200, help='Dimensionality of input sequence')
     parser.add_argument('--embed_dim', type=int, default=300, help='Dimensionality of the embeddings')
     parser.add_argument('--output_dim', type=int, default=2, help='Dimensionality of output sequence')
@@ -140,7 +141,7 @@ if __name__ == "__main__":
     parser.add_argument('--train_epochs', type=int, default=150, help='Number of training epochs')
     parser.add_argument('--bidirectional', type=bool, default=True)
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
-    parser.add_argument('--recurrent_dropout_model', type=bool, default=True, help="Vanilla bidirectional LSTM or recurrent output LSTM")
+    parser.add_argument('--recurrent_dropout_model', type=bool, default=False, help="Vanilla bidirectional LSTM or recurrent output LSTM")
 
 
     config = parser.parse_args()
