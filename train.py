@@ -39,7 +39,7 @@ def train(config):
     if not (config.recurrent_dropout_model):
         model = NN(dataset.vocab_size, config.embed_dim, config.hidden_dim, config.output_dim, config.n_layers, config.bidirectional, config.dropout, 0).to(device)
     else: 
-        model = Model(dataset.vocab_size, output_dim=config.output_dim).to(device)
+        model = Model(dataset.vocab_size, output_dim=config.output_dim, bidirectional=config.bidirectional).to(device)
 
     if not os.path.exists(f'runs/{config.name}'):
         os.makedirs(f'runs/{config.name}')
