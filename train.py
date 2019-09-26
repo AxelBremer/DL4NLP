@@ -130,9 +130,9 @@ if __name__ == "__main__":
     parser.add_argument('--learning_rate', type=float, default=0.005, help='Learning rate for Adam')
     parser.add_argument('--dropout', type=float, default=0.5, help='Drop out rate')
     parser.add_argument('--train_epochs', type=int, default=150, help='Number of training epochs')
-    parser.add_argument('--bidirectional', type=bool, default=True)
+    parser.add_argument('--bidirectional', type=bool, default=False)
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
-    parser.add_argument('--recurrent_dropout_model', type=bool, default=True, help="Vanilla bidirectional LSTM or recurrent output LSTM")
+    parser.add_argument('--recurrent_dropout_model', type=bool, default=False, help="Vanilla bidirectional LSTM or recurrent output LSTM")
 
 
     config = parser.parse_args()
