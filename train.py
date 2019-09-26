@@ -7,9 +7,13 @@ import time
 from datetime import datetime
 import numpy as np
 
+import os
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+
+import json
 
 from imdb_dataset import IMDBDataset
 from model import NN
@@ -23,7 +27,6 @@ def train(config):
     # Initialize the device which to run the model on
     device = torch.device(device)
 
-   
     # Initialize the dataset and data loader (note the +1)
     dataset = IMDBDataset(train_or_test='train', seq_length=config.seq_length)
     data_loader = DataLoader(dataset, config.batch_size, shuffle=True, num_workers=4)
@@ -38,6 +41,15 @@ def train(config):
     else: 
         model = Model(dataset.vocab_size, output_dim=config.output_dim).to(device)
 
+    if not os.path.exists(f'runs/{config.name}'):
+        os.makedirs(f'runs/{config.name}')
+
+    print(config.__dict__)
+
+    with open(f'runs/{config.name}/args.txt', 'w') as f:
+        json.dump(config.__dict__, f, indent=2)
+
+
 
     # Setup the loss and optimizer
     criterion = nn.CrossEntropyLoss().to(device)
@@ -50,13 +62,11 @@ def train(config):
     while epochs < config.train_epochs:
         accuracies = []
         losses = [] 
-        t1 = time.time()
         print('Training')
         for step, (batch_inputs, batch_targets) in enumerate(data_loader):
 
             x = batch_inputs.long().to(device)
             y_target = batch_targets.long().to(device)
-
 
             predictions = model(x)
 
@@ -72,9 +82,6 @@ def train(config):
             accuracies.append(accuracy)
             losses.append(loss)
 
-
-        t2 = time.time()
-        examples_per_second = len(dataset)/float(t2-t1)
 
         accuracy = np.array(accuracies).mean()
         loss = np.array(losses).mean()
@@ -104,7 +111,7 @@ def train(config):
 
         if (test_loss < lowest):
             lowest = test_loss
-            torch.save(model.state_dict(), f'{config.seq_length}_model.pt')
+            torch.save(model.state_dict(), f'runs/{config.name}/model.pt')
 
         epochs += 1
         print("[{}] Train epochs {:04d}/{:04d}, Train Accuracy = {:.2f}, Train Loss = {:.3f}, Test Accuracy = {:.2f}, Test Loss = {:.3f}".format(
@@ -121,6 +128,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Model params
+    parser.add_argument('--name', type=str, required=True, help='name of run')
     parser.add_argument('--seq_length', type=int, default=200, help='Dimensionality of input sequence')
     parser.add_argument('--embed_dim', type=int, default=300, help='Dimensionality of the embeddings')
     parser.add_argument('--output_dim', type=int, default=2, help='Dimensionality of output sequence')
