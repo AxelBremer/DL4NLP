@@ -3,7 +3,6 @@ sys.path.insert(0, 'recurrent_dropout_utils/')
 from embed_dropout import embedded_dropout
 from locked_dropout import LockedDropout
 from weightdrop import WeightDrop
-import numpy as np
 
 import torch
 import torch.nn as nn
@@ -12,11 +11,10 @@ import torch.nn as nn
 
 class Model(nn.Module):
     def __init__(self, nb_words,embedding_size=300,  hidden_size=512, output_dim=2, n_layers=2,
-                 wdrop=0.25, edrop=0.1, idrop=0.25, batch_first=True, bidirectional=False):
+                 wdrop=0.25, edrop=0.1, idrop=0.25, batch_first = True):
         super(Model, self).__init__()
 
         self.lockdrop = LockedDropout()
-        self.bidirectional = bidirectional
         self.idrop = idrop
         self.edrop = edrop
         self.n_layers = n_layers
@@ -31,7 +29,6 @@ class Model(nn.Module):
                          for rnn in self.rnns]
         self.rnns = torch.nn.ModuleList(self.rnns)
         self.output_layer = nn.Linear(hidden_size, output_dim)
-        if bidirectional: self.output_layer = nn.Linear(hidden_size*2, output_dim)
         self.init_weights()
         self.sigmoid = nn.Sigmoid()
 
@@ -41,8 +38,8 @@ class Model(nn.Module):
         self.embedding.weight.data.uniform_(-initrange, initrange)
         self.output_layer.bias.data.fill_(0)
         self.output_layer.weight.data.uniform_(-initrange, initrange)
-
-    def lstm_pass(self, X):
+        
+    def forward(self, X):
         emb = embedded_dropout(self.embedding, X, dropout=self.edrop if self.training else 0)
         raw_output = self.lockdrop(emb, self.idrop)
         new_hidden, new_cell_state = [], []
@@ -57,18 +54,8 @@ class Model(nn.Module):
         hidden = torch.cat(new_hidden, 0)
         cell_state = torch.cat(new_cell_state, 0)
         final_output =  hidden[-1,:,:].squeeze()
-        return final_output
-        
-    def forward(self, X):
-        if not self.bidirectional:
-            final_output = self.lstm_pass(X)
-            final_output = self.output_layer(final_output)
-        else:
-            final_output_1 = self.lstm_pass(X)
-            X2 = X.flip(1)
-            final_output_2 = self.lstm_pass(X2)
-            final_output = self.output_layer(torch.cat((final_output_1, final_output_2),1))
-        
+       
+        final_output = self.output_layer(final_output)
         return self.sigmoid(final_output).squeeze()
 
 
