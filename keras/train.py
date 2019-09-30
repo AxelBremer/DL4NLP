@@ -28,21 +28,23 @@ def train(config):
     with open(f'runs/{config.name}/args.txt', 'w') as f:
         json.dump(config.__dict__, f, indent=2)
 
-    (x_train, y_train), (x_test, y_test) = load_data(config.seq_length, config.max_features) 
+    (x_train, y_train), (x_val, y_val), (x_test, y_test) = load_data(config.seq_length, config.max_features) 
+
+    print(x_train.shape)
 
     model = get_model(seq_length=config.seq_length, embed_dim=config.embed_dim, hidden_dim=config.hidden_dim, 
                       n_layers=config.n_layers, dropout=config.dropout, bidirectional=config.bidirectional, 
-                      recurrent_dropout=config.recurrent_dropout, max_features=config.max_features, attention=config.attention)
+                      recurrent_dropout=config.recurrent_dropout, max_features=config.max_features, attention=config.attention, weight_decay=config.weight_decay)
 
     print(model.summary())
 
-    checkpoint = ModelCheckpoint(f'runs/{config.name}/model.h5', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+    checkpoint = ModelCheckpoint(f'runs/{config.name}/model.h5', monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
 
     print('Train...')
     history = model.fit(x_train, y_train,
             batch_size=config.batch_size,
             epochs=config.train_epochs,
-            validation_data=[x_test, y_test],
+            validation_data=[x_val, y_val],
             shuffle=True,
             callbacks=[checkpoint])
 
@@ -53,7 +55,7 @@ def train(config):
 
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
-    plt.legend(['acc', 'val_acc'])
+    plt.legend(['loss', 'val_loss'])
     plt.savefig(f'runs/{config.name}/loss.png')
 
 if __name__ == "__main__":
@@ -70,10 +72,11 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=128, help='Number of examples to process in a batch')
     parser.add_argument('--learning_rate', type=float, default=0.005, help='Learning rate for Adam')
     parser.add_argument('--dropout', type=float, default=0.5, help='Drop out rate')
-    parser.add_argument('--recurrent_dropout', type=float, default=0.25, help='recurrent dropout rate')
+    parser.add_argument('--recurrent_dropout', type=float, default=0.5, help='recurrent dropout rate')
     parser.add_argument('--train_epochs', type=int, default=15, help='Number of training epochs')
     parser.add_argument('--bidirectional', type=bool, default=False)
     parser.add_argument('--attention', type=bool, default=False)
+    parser.add_argument('--weight_decay', type=float, default=0.01)
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
 
 
