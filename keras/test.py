@@ -1,3 +1,5 @@
+from tensorflow.python.util import deprecation
+
 from __future__ import print_function
 import numpy as np
 import os

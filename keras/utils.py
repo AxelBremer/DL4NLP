@@ -1,12 +1,17 @@
+from tensorflow.python.util import deprecation
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+
 import numpy as np
 
 import matplotlib.pyplot as plt
 
 from keras.preprocessing import sequence
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Embedding, LSTM, Bidirectional
+from keras.layers import Dense, Dropout, Embedding, LSTM, Bidirectional, Activation
 from keras.datasets import imdb
 from keras.utils import to_categorical
+from keras.constraints import max_norm
+from keras.layers.normalization import BatchNormalization
 from attention import Attention
 
 def load_data(seq_length, max_features):
@@ -36,19 +41,19 @@ def load_data(seq_length, max_features):
 
 def get_model(seq_length, embed_dim, hidden_dim, n_layers, dropout,  recurrent_dropout, bidirectional, max_features, attention):
     model = Sequential()
-    model.add(Embedding(max_features, 300, input_length=seq_length))
+    model.add(Embedding(max_features, 300, input_length=seq_length, dropout=dropout))
     for i in range(n_layers-1):
         if bidirectional:
-            model.add(Bidirectional(LSTM(units=hidden_dim, return_sequences=True, dropout=dropout, recurrent_dropout=recurrent_dropout)))
+            model.add(Bidirectional(LSTM(units=hidden_dim, return_sequences=True, dropout=dropout, recurrent_dropout=recurrent_dropout, kernel_constraint=max_norm(0.5), recurrent_constraint=max_norm(0.5))))
         else:
-            model.add(LSTM(units=hidden_dim, return_sequences=True, dropout=dropout, recurrent_dropout=recurrent_dropout))
+            model.add(LSTM(units=hidden_dim, return_sequences=True, dropout=dropout, recurrent_dropout=recurrent_dropout, kernel_constraint=max_norm(0.5), recurrent_constraint=max_norm(0.5)))
     if bidirectional:
-        model.add(Bidirectional(LSTM(units=hidden_dim, return_sequences=attention, dropout=dropout, recurrent_dropout=recurrent_dropout)))
+        model.add(Bidirectional(LSTM(units=hidden_dim, return_sequences=attention, dropout=dropout, recurrent_dropout=recurrent_dropout, kernel_constraint=max_norm(0.5), recurrent_constraint=max_norm(0.5))))
     else:
-        model.add(LSTM(units=hidden_dim, return_sequences=attention, dropout=dropout, recurrent_dropout=recurrent_dropout))
+        model.add(LSTM(units=hidden_dim, return_sequences=attention, dropout=dropout, recurrent_dropout=recurrent_dropout, kernel_constraint=max_norm(0.5), recurrent_constraint=max_norm(0.5)))
     if attention: model.add(Attention(seq_length))
     model.add(Dropout(rate=1-dropout))
-    model.add(Dense(2, activation='sigmoid'))
+    model.add(Dense(2, activation='softmax'))
     model.compile('adam', 'categorical_crossentropy', metrics=['accuracy'])
 
     return model

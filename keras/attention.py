@@ -1,3 +1,6 @@
+from tensorflow.python.util import deprecation
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+
 from keras import backend as K
 from keras.engine.topology import Layer
 from keras import initializers, regularizers, constraints

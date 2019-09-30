@@ -16,6 +16,9 @@ from attention import Attention
 
 from utils import load_data, get_model
 
+from tensorflow.python.util import deprecation
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+
 def train(config):
     if not os.path.exists(f'runs/{config.name}'):
         os.makedirs(f'runs/{config.name}')
@@ -48,10 +51,10 @@ def train(config):
         json.dump(history.history, f)
 
 
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
     plt.legend(['acc', 'val_acc'])
-    plt.show()
+    plt.savefig(f'runs/{config.name}/loss.png')
 
 if __name__ == "__main__":
     # Parse training configuration
@@ -68,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument('--learning_rate', type=float, default=0.005, help='Learning rate for Adam')
     parser.add_argument('--dropout', type=float, default=0.5, help='Drop out rate')
     parser.add_argument('--recurrent_dropout', type=float, default=0.25, help='recurrent dropout rate')
-    parser.add_argument('--train_epochs', type=int, default=150, help='Number of training epochs')
+    parser.add_argument('--train_epochs', type=int, default=15, help='Number of training epochs')
     parser.add_argument('--bidirectional', type=bool, default=False)
     parser.add_argument('--attention', type=bool, default=False)
     parser.add_argument('--device', type=str, default="cuda:0", help="Training device 'cpu' or 'cuda:0'")
