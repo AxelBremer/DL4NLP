@@ -7,7 +7,7 @@ from keras import initializers, regularizers, constraints
 
 
 class Attention(Layer):
-    def __init__(self, step_dim,
+    def __init__(self, step_dim=200,
                  W_regularizer=None, b_regularizer=None,
                  W_constraint=None, b_constraint=None,
                  bias=True, **kwargs):

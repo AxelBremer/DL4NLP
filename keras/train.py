@@ -58,6 +58,11 @@ def train(config):
     plt.legend(['loss', 'val_loss'])
     plt.savefig(f'runs/{config.name}/loss.png')
 
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
+    plt.legend(['acc', 'val_acc'])
+    plt.savefig(f'runs/{config.name}/acc.png')
+
 if __name__ == "__main__":
     # Parse training configuration
     parser = argparse.ArgumentParser()
