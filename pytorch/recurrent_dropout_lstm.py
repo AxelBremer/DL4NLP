@@ -56,6 +56,6 @@ class Model(nn.Module):
         final_output =  hidden[-1,:,:].squeeze()
        
         final_output = self.output_layer(final_output)
-        return self.sigmoid(final_output)
+        return self.sigmoid(final_output).squeeze()
 
 

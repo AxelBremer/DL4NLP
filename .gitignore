@@ -1,4 +1,8 @@
+pytorch/data/
+pytorch/runs/
 data/
+keras/runs/
+.vscode/
 
 *.pt
 
