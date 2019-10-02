@@ -60,7 +60,6 @@ def train(config):
                 x.transpose(1,0)
 
             predictions = model(x)
-            print(predictions.shape)
 
             loss = criterion(predictions, y_target)
             optimizer.zero_grad()
@@ -72,7 +71,7 @@ def train(config):
             # print(predictions)
 
             if config.recurrent_dropout_model:
-                accuracy = (torch.argmax(predictions, dim=0) == y_target).cpu().numpy().mean()
+                accuracy = (torch.argmax(predictions, dim=1) == y_target).cpu().numpy().mean()
 
 
             else:
@@ -99,7 +98,7 @@ def train(config):
                 x = batch_inputs.long().to(device)
                 y_target = batch_targets.long().to(device)
 
-                predictions = model(x, dropout=False)
+                predictions = model(x)
 
                 test_loss = criterion(predictions, y_target)
                 
