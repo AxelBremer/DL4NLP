@@ -1,5 +1,6 @@
-from tensorflow.python.util import deprecation
-deprecation._PRINT_DEPRECATION_WARNINGS = False
+'''
+This file contains two utility functions for the keras model training and testing.
+'''
 
 import numpy as np
 
@@ -16,6 +17,11 @@ from keras.layers.normalization import BatchNormalization
 from attention import Attention
 
 def load_data(seq_length, max_features):
+    '''
+    This function loads the imdb dataset from keras and splits it into a training,
+    validation and test set. Np.load is modified because some errors were occuring
+    when the normal load was used.
+    '''
     print('Loading data...')
     # save np.load
     np_load_old = np.load
@@ -49,8 +55,11 @@ def load_data(seq_length, max_features):
     return (x_train, y_train), (x_val, y_val), (x_test, y_test)
 
 def get_model(seq_length, embed_dim, hidden_dim, n_layers, dropout,  recurrent_dropout, bidirectional, max_features, attention, weight_decay):
+    '''
+    This function returns a Keras Sequential model. It's exact infrastructure depends on the given parameters.
+    '''
     model = Sequential()
-    model.add(Embedding(max_features, 300, input_length=seq_length, dropout=dropout))
+    model.add(Embedding(max_features, embed_dim, input_length=seq_length, dropout=dropout))
     for i in range(n_layers-1):
         if bidirectional:
             model.add(Bidirectional(LSTM(units=hidden_dim, return_sequences=True, dropout=dropout, recurrent_dropout=recurrent_dropout, kernel_constraint=max_norm(0.5), recurrent_constraint=max_norm(0.5), kernel_regularizer=l2(weight_decay), recurrent_regularizer=l2(weight_decay))))
@@ -60,7 +69,7 @@ def get_model(seq_length, embed_dim, hidden_dim, n_layers, dropout,  recurrent_d
         model.add(Bidirectional(LSTM(units=hidden_dim, return_sequences=attention, dropout=dropout, recurrent_dropout=recurrent_dropout, kernel_constraint=max_norm(0.5), recurrent_constraint=max_norm(0.5), kernel_regularizer=l2(weight_decay), recurrent_regularizer=l2(weight_decay))))
     else:
         model.add(LSTM(units=hidden_dim, return_sequences=attention, dropout=dropout, recurrent_dropout=recurrent_dropout, kernel_constraint=max_norm(0.5), recurrent_constraint=max_norm(0.5), kernel_regularizer=l2(weight_decay), recurrent_regularizer=l2(weight_decay)))
-    if attention: model.add(Attention(seq_length))
+    if attention: model.add(Attention(seq_length, W_regularizer=l2(weight_decay), b_regularizer=l2(weight_decay)))
     model.add(Dropout(rate=1-dropout))
     model.add(Dense(2, activation='softmax', kernel_regularizer=l2(weight_decay), bias_regularizer=l2(weight_decay)))
     model.compile('adam', 'categorical_crossentropy', metrics=['accuracy'])

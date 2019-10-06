@@ -1,5 +1,6 @@
-from tensorflow.python.util import deprecation
-deprecation._PRINT_DEPRECATION_WARNINGS = False
+'''
+This file implements the Attention layer for use in keras.
+'''
 
 from keras import backend as K
 from keras.engine.topology import Layer

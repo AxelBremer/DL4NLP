@@ -1,3 +1,9 @@
+'''
+This script trains a keras model for sentiment analysis on the imdb review dataset.
+It uses the parameters specified using command line arguments. The default values
+can be found at the end of this file.
+'''
+
 from __future__ import print_function
 import numpy as np
 import os
@@ -16,21 +22,21 @@ from attention import Attention
 
 from utils import load_data, get_model
 
-from tensorflow.python.util import deprecation
-deprecation._PRINT_DEPRECATION_WARNINGS = False
-
 def train(config):
+    # Create runs folder if it doesn't yet exist
+    if not os.path.exists('runs'):
+        os.makedirs('runs')
+    # Create folder for this run
     if not os.path.exists(f'runs/{config.name}'):
         os.makedirs(f'runs/{config.name}')
 
     print(config.__dict__)
 
+    # Save the configuration in txt file.
     with open(f'runs/{config.name}/args.txt', 'w') as f:
         json.dump(config.__dict__, f, indent=2)
 
     (x_train, y_train), (x_val, y_val), (x_test, y_test) = load_data(config.seq_length, config.max_features) 
-
-    print(x_train.shape)
 
     model = get_model(seq_length=config.seq_length, embed_dim=config.embed_dim, hidden_dim=config.hidden_dim, 
                       n_layers=config.n_layers, dropout=config.dropout, bidirectional=config.bidirectional, 
@@ -40,7 +46,6 @@ def train(config):
 
     checkpoint = ModelCheckpoint(f'runs/{config.name}/model.h5', monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
 
-    print('Train...')
     history = model.fit(x_train, y_train,
             batch_size=config.batch_size,
             epochs=config.train_epochs,
@@ -48,11 +53,11 @@ def train(config):
             shuffle=True,
             callbacks=[checkpoint])
 
-
+    # Save loss/acc history
     with open(f'runs/{config.name}/history.json', 'w') as f:
         json.dump(history.history, f)
 
-
+    # Save loss and accuracy curve
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
     plt.legend(['loss', 'val_loss'])

@@ -1,3 +1,7 @@
+'''
+Running this script prints the best loss and accuracy for each run in the runs/ map
+'''
+
 import os 
 import json
 
